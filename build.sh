@@ -5,18 +5,20 @@ echo "🔧 Instalacija dependencies..."
 pip install -r requirements.txt
 
 echo "🗄️  Pokretanje migracija..."
-alembic upgrade head
+alembic upgrade head || python -c "
+from app.db.session import engine
+from app.models.models import Base
+Base.metadata.create_all(bind=engine)
+print('✅ Tablice kreirane direktno')
+"
 
 echo "🌱 Seedanje kategorija..."
 python -c "
-import os, sys
+import sys
 sys.path.insert(0, '.')
-
 from app.db.session import SessionLocal, engine
 from app.models.models import Base, Category
-
 Base.metadata.create_all(bind=engine)
-
 CATEGORIES = [
     {'name': 'Paintball',      'icon': 'paintball'},
     {'name': 'Kayak',          'icon': 'kayak'},
@@ -27,7 +29,6 @@ CATEGORIES = [
     {'name': 'Zipline',        'icon': 'zipline'},
     {'name': 'Rafting',        'icon': 'rafting'},
 ]
-
 db = SessionLocal()
 added = 0
 for cat in CATEGORIES:
